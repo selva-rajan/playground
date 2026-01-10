@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello World | CI/CD Playground</title>
+    <title>Deployment Verified | CI/CD Playground</title>
     <style>
         body {
             margin: 0;
@@ -11,48 +11,66 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            font-family: Arial, Helvetica, sans-serif;
-            color: #fff;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
         }
 
-        .card {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 40px 60px;
-            border-radius: 12px;
+        .container {
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 45px 70px;
+            border-radius: 14px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+            animation: fadeIn 1.2s ease-in-out;
         }
 
         h1 {
+            font-size: 3.2rem;
             margin: 0;
-            font-size: 3rem;
         }
 
         p {
-            margin-top: 10px;
-            font-size: 1.1rem;
+            margin-top: 12px;
+            font-size: 1.15rem;
             opacity: 0.9;
         }
 
-        .badge {
-            margin-top: 20px;
+        .status {
+            margin-top: 25px;
+            padding: 10px 22px;
+            border-radius: 25px;
             display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: #00e676;
-            color: #000;
-            font-size: 0.85rem;
-            font-weight: bold;
+            background: #4caf50;
+            color: #0a0a0a;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .version {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.75;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Hello, World! 👋</h1>
-        <p>Welcome to my Playground</p>
-        <span class="badge">Pipeline Successful</span>
+    <div class="container">
+        <h1>🚀 Deployment Verified</h1>
+        <p>Your latest CI/CD pipeline has been successfully deployed.</p>
+        <div class="status">Version 2 – New Release</div>
+        <div class="version">Deployed via CI/CD Playground</div>
     </div>
 </body>
 </html>
-
