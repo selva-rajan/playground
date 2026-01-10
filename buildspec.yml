@@ -29,5 +29,4 @@ phases:
       - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
       - echo Updating Kubernetes Deployment...
-      - kubectl set image deployment/nginx \
-          nginx=$ECR_REPO:$IMAGE_TAG
+      - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
