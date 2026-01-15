@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: ap-southeast-1
+    AWS_DEFAULT_REGION: ap-southeast-1
     CLUSTER_NAME: eks-cluster-cms
     ECR_REPO: 776567512500.dkr.ecr.ap-southeast-1.amazonaws.com/nginx-custom
 
@@ -13,6 +14,14 @@ phases:
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
       - IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
       - echo Image tag is $IMAGE_TAG
+      - echo Installing kubectl 1.29...
+      - curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2023-11-14/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+
+      - echo Verifying versions...
+      - kubectl version --client
+      - aws --version
 
   build:
     commands:
@@ -27,6 +36,9 @@ phases:
 
       - echo Updating kubeconfig for EKS...
       - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+      - aws sts get-caller-identity
+      - kubectl auth can-i update deployment --namespace default
 
       - echo Updating Kubernetes Deployment...
       - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
