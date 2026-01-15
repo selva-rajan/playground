@@ -22,11 +22,13 @@ phases:
       - "docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
 
   post_build:
-    commands:
-      - "echo POST_BUILD"
-      - "docker push $ECR_REPO:$IMAGE_TAG"
-      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
-      - "kubectl version --client"
-      - "kubectl auth can-i get nodes"
-      - "kubectl get nodes"
-      - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
+  commands:
+    - "echo POST_BUILD"
+    - "docker push $ECR_REPO:$IMAGE_TAG"
+    - "export AWS_EKS_DISABLE_LEGACY_KUBECTL_PLUGIN=true"
+    - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --alias codebuild"
+    - "kubectl config current-context"
+    - "kubectl cluster-info"
+    - "kubectl auth can-i get nodes"
+    - "kubectl get nodes"
+    - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
