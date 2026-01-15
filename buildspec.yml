@@ -9,20 +9,20 @@ env:
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-      - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
-      - echo Image tag: $IMAGE_TAG
+      - "echo Logging in to Amazon ECR..."
+      - "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
+      - "export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER"
+      - "echo Image tag: $IMAGE_TAG"
 
   build:
     commands:
-      - docker build -t nginx-custom:$IMAGE_TAG .
-      - docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG
+      - "docker build -t nginx-custom:$IMAGE_TAG ."
+      - "docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
 
   post_build:
     commands:
-      - docker push $ECR_REPO:$IMAGE_TAG
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --role-arn arn:aws:iam::776567512500:role/service-role/codebuild-nginx-ecr-build-service-role
-      - aws sts get-caller-identity
-      - kubectl get nodes
-      - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
+      - "docker push $ECR_REPO:$IMAGE_TAG"
+      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --role-arn arn:aws:iam::776567512500:role/service-role/codebuild-nginx-ecr-build-service-role"
+      - "aws sts get-caller-identity"
+      - "kubectl get nodes"
+      - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
