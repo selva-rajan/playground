@@ -3,31 +3,16 @@ version: 0.2
 env:
   variables:
     AWS_REGION: ap-southeast-1
-    AWS_DEFAULT_REGION: ap-southeast-1
     CLUSTER_NAME: eks-cluster-cms
     ECR_REPO: 776567512500.dkr.ecr.ap-southeast-1.amazonaws.com/nginx-custom
 
 phases:
-  install:
-    commands:
-      - echo Installing kubectl 1.29...
-      - curl -fL https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl -o kubectl
-      - chmod +x kubectl
-      - mv kubectl /usr/local/bin/kubectl
-
-      - echo Validating kubectl binary...
-      - ls -lh /usr/local/bin/kubectl
-      - file /usr/local/bin/kubectl
-
-      - echo Checking kubectl version...
-      - /usr/local/bin/kubectl version --client --output=yaml
-
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-      - IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
-      - echo Image tag is $IMAGE_TAG
+      - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
+      - echo Image tag: $IMAGE_TAG
 
   build:
     commands:
@@ -41,12 +26,16 @@ phases:
       - docker push $ECR_REPO:$IMAGE_TAG
 
       - echo Updating kubeconfig for EKS...
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      - aws eks update-kubeconfig \
+        --region $AWS_REGION \
+        --name $CLUSTER_NAME \
+        --role-arn arn:aws:iam::776567512500:role/codebuild-nginx-ecr-build-service-role
+
+      - echo Verifying identity...
+      - aws sts get-caller-identity
 
       - echo Verifying EKS access...
-      - aws sts get-caller-identity
       - kubectl get nodes
-      - kubectl auth can-i update deployment/nginx
 
       - echo Updating Kubernetes Deployment...
       - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
