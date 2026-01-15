@@ -2,27 +2,27 @@ version: 0.2
 
 env:
   variables:
-    AWS_REGION: ap-southeast-1
-    CLUSTER_NAME: eks-cluster-cms
-    ECR_REPO: 776567512500.dkr.ecr.ap-southeast-1.amazonaws.com/nginx-custom
+    AWS_REGION: "ap-southeast-1"
+    CLUSTER_NAME: "eks-cluster-cms"
+    ECR_REPO: "776567512500.dkr.ecr.ap-southeast-1.amazonaws.com/nginx-custom"
 
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-      - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
-      - echo "Image tag: $IMAGE_TAG"
+      - "echo Logging in to Amazon ECR..."
+      - "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
+      - "export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER"
+      - "echo Image tag: $IMAGE_TAG"
 
   build:
     commands:
-      - docker build -t nginx-custom:$IMAGE_TAG .
-      - docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG
+      - "docker build -t nginx-custom:$IMAGE_TAG ."
+      - "docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
 
   post_build:
     commands:
-      - docker push $ECR_REPO:$IMAGE_TAG
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --no-role-arn
-      - aws sts get-caller-identity
-      - kubectl get nodes
-      - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
+      - "docker push $ECR_REPO:$IMAGE_TAG"
+      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
+      - "aws sts get-caller-identity"
+      - "kubectl get nodes"
+      - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
