@@ -22,7 +22,7 @@ phases:
   post_build:
     commands:
       - "docker push $ECR_REPO:$IMAGE_TAG"
-      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --role-arn arn:aws:iam::776567512500:role/service-role/codebuild-nginx-ecr-build-service-role"
+      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
       - "aws sts get-caller-identity"
       - "kubectl get nodes"
       - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
