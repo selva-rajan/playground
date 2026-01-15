@@ -16,26 +16,18 @@ phases:
 
   build:
     commands:
-      - echo Building Docker image...
       - docker build -t nginx-custom:$IMAGE_TAG .
       - docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG
 
   post_build:
     commands:
-      - echo Pushing Docker image to ECR...
       - docker push $ECR_REPO:$IMAGE_TAG
 
-      - echo Updating kubeconfig for EKS...
       - aws eks update-kubeconfig \
         --region $AWS_REGION \
         --name $CLUSTER_NAME \
-        --role-arn arn:aws:iam::776567512500:role/codebuild-nginx-ecr-build-service-role
+        --role-arn arn:aws:iam::776567512500:role/service-role/codebuild-nginx-ecr-build-service-role
 
-      - echo Verifying identity...
       - aws sts get-caller-identity
-
-      - echo Verifying EKS access...
       - kubectl get nodes
-
-      - echo Updating Kubernetes Deployment...
       - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
