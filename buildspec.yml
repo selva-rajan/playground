@@ -9,10 +9,10 @@ env:
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
       - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
-      - echo Image tag: $IMAGE_TAG
+      - echo "Image tag: $IMAGE_TAG"
 
   build:
     commands:
@@ -22,9 +22,7 @@ phases:
   post_build:
     commands:
       - docker push $ECR_REPO:$IMAGE_TAG
-
       - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --no-role-arn
-
       - aws sts get-caller-identity
       - kubectl get nodes
       - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
