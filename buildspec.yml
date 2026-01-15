@@ -9,44 +9,24 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "==== PRE BUILD ===="
-      - echo "AWS identity used by CodeBuild"
-      - aws sts get-caller-identity
-
-      - echo "Logging in to Amazon ECR"
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-
-      - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
-      - echo "Image tag: $IMAGE_TAG"
+      - "echo PRE_BUILD"
+      - "aws sts get-caller-identity"
+      - "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
+      - "export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER"
+      - "echo IMAGE_TAG=$IMAGE_TAG"
 
   build:
     commands:
-      - echo "==== BUILD ===="
-      - docker build -t nginx-custom:$IMAGE_TAG .
-      - docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG
+      - "echo BUILD"
+      - "docker build -t nginx-custom:$IMAGE_TAG ."
+      - "docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
 
   post_build:
     commands:
-      - echo "==== POST BUILD ===="
-
-      - echo "Pushing image to ECR"
-      - docker push $ECR_REPO:$IMAGE_TAG
-
-      - echo "Updating kubeconfig"
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-
-      - echo "Kubeconfig content"
-      - kubectl config view
-
-      - echo "Kubernetes client version"
-      - kubectl version --client
-
-      - echo "RBAC check"
-      - kubectl auth can-i get nodes
-      - kubectl auth can-i update deployment
-
-      - echo "Listing nodes"
-      - kubectl get nodes
-
-      - echo "Updating deployment image"
-      - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
+      - "echo POST_BUILD"
+      - "docker push $ECR_REPO:$IMAGE_TAG"
+      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
+      - "kubectl version --client"
+      - "kubectl auth can-i get nodes"
+      - "kubectl get nodes"
+      - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
