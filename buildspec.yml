@@ -8,20 +8,24 @@ env:
     ECR_REPO: 776567512500.dkr.ecr.ap-southeast-1.amazonaws.com/nginx-custom
 
 phases:
+  install:
+    commands:
+      - echo Installing kubectl 1.29...
+      - curl -L -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.29.0/2023-11-14/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/kubectl
+
+      - echo Verifying kubectl...
+      - file /usr/local/bin/kubectl
+      - kubectl version --client
+      - aws --version
+
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
       - IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
       - echo Image tag is $IMAGE_TAG
-      - echo Installing kubectl 1.29...
-      - curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2023-11-14/bin/linux/amd64/kubectl
-      - chmod +x kubectl
-      - mv kubectl /usr/local/bin/
-
-      - echo Verifying versions...
-      - kubectl version --client
-      - aws --version
 
   build:
     commands:
@@ -37,8 +41,10 @@ phases:
       - echo Updating kubeconfig for EKS...
       - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
+      - echo Verifying EKS access...
       - aws sts get-caller-identity
-      - kubectl auth can-i update deployment --namespace default
+      - kubectl get nodes
+      - kubectl auth can-i update deployment/nginx
 
       - echo Updating Kubernetes Deployment...
       - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
