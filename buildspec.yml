@@ -52,7 +52,7 @@ phases:
 
       # Configure kubeconfig
       - rm -f ~/.kube/config
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --role-arn arn:aws:iam::776567512500:role/service-role/codebuild-nginx-ecr-build-service-role
 
       # Verify access
       - kubectl get nodes
