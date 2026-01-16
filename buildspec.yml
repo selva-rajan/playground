@@ -27,6 +27,7 @@ phases:
       - "docker push $ECR_REPO:$IMAGE_TAG"
       - "export AWS_EKS_DISABLE_LEGACY_KUBECTL_PLUGIN=true"
       - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --alias codebuild"
+      - "aws eks get-token --region ap-southeast-1 --cluster-name eks-cluster-cms"
       - "kubectl config current-context"
       - "kubectl cluster-info"
       - "kubectl auth can-i get nodes"
