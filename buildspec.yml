@@ -52,4 +52,10 @@ phases:
 
       # Configure kubeconfig
       - rm -f ~/.kube/config
-      - aws eks update-kubeconfig --region $AWS_REGION --n_
+      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+      # Verify access
+      - kubectl get nodes
+
+      # Update deployment
+      - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
