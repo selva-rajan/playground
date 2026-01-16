@@ -33,8 +33,7 @@ phases:
       - aws sts get-caller-identity
 
       # Login to ECR
-      - aws ecr get-login-password --region "$AWS_REGION" \
-        | docker login --username AWS --password-stdin "$ECR_REPO"
+      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REPO"
 
       # Image tag
       - IMAGE_TAG="$CODEBUILD_BUILD_NUMBER"
