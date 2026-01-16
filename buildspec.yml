@@ -1,61 +1,69 @@
-version: "0.2"
+version: 0.2
 
 env:
   variables:
     AWS_REGION: "ap-southeast-1"
     CLUSTER_NAME: "eks-cluster-cms"
     ECR_REPO: "776567512500.dkr.ecr.ap-southeast-1.amazonaws.com/nginx-custom"
-    AWS_EKS_DISABLE_LEGACY_KUBECTL_PLUGIN: "true"
 
 phases:
   install:
     commands:
-      - "echo INSTALL"
+      - echo "INSTALL"
 
-      # ---- Install AWS CLI v2 ----
-      - "curl -s https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip"
-      - "unzip -q awscliv2.zip"
-      - "./aws/install --update"
+      # Install AWS CLI v2
+      - curl -s https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
+      - unzip -q awscliv2.zip
+      - ./aws/install --update
+      - export PATH=/usr/local/bin:$PATH
+      - hash -r
+      - aws --version
 
-      # ---- FORCE AWS CLI v2 FIRST ----
-      - "export PATH=/usr/local/bin:$PATH"
-      - "hash -r"
-
-      - "which aws"
-      - "aws --version"
-
-      # ---- Install kubectl ----
-      - "curl -LO https://dl.k8s.io/release/v1.28.5/bin/linux/amd64/kubectl"
-      - "chmod +x kubectl"
-      - "mv kubectl /usr/local/bin/kubectl"
-      - "kubectl version --client=true"
+      # Install kubectl (EKS compatible)
+      - curl -LO "https://dl.k8s.io/release/v1.28.5/bin/linux/amd64/kubectl"
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/kubectl
+      - kubectl version --client=true
 
   pre_build:
     commands:
-      - "echo PRE_BUILD"
-      - "aws sts get-caller-identity"
-      - "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
-      - "IMAGE_TAG=$CODEBUILD_BUILD_NUMBER"
-      - "echo IMAGE_TAG=$IMAGE_TAG"
+      - echo "PRE_BUILD"
+
+      # Verify identity (this MUST be CodeBuild role)
+      - aws sts get-caller-identity
+
+      # Login to ECR
+      - aws ecr get-login-password --region "$AWS_REGION" \
+        | docker login --username AWS --password-stdin "$ECR_REPO"
+
+      # Image tag
+      - IMAGE_TAG="$CODEBUILD_BUILD_NUMBER"
+      - echo "IMAGE_TAG=$IMAGE_TAG"
 
   build:
     commands:
-      - "echo BUILD"
-      - "docker build -t nginx-custom:$IMAGE_TAG ."
-      - "docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
+      - echo "BUILD"
+
+      # Build Docker image
+      - docker build -t nginx-custom:"$IMAGE_TAG" .
+
+      # Tag for ECR
+      - docker tag nginx-custom:"$IMAGE_TAG" "$ECR_REPO:$IMAGE_TAG"
 
   post_build:
     commands:
-      - "echo POST_BUILD"
-      - "docker push $ECR_REPO:$IMAGE_TAG"
+      - echo "POST_BUILD"
 
-      # ---- RECREATE kubeconfig AFTER aws v2 ----
-      - "rm -f ~/.kube/config"
-      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
+      # Push image to ECR
+      - docker push "$ECR_REPO:$IMAGE_TAG"
 
-      # ---- DEBUG TOKEN (IMPORTANT) ----
-      - "aws eks get-token --region $AWS_REGION --cluster-name $CLUSTER_NAME"
+      # Fresh kubeconfig (important in CodeBuild)
+      - rm -f ~/.kube/config
 
-      # ---- This WILL now work ----
-      - "kubectl get nodes"
-      - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
+      # Configure kubectl for EKS
+      - aws eks update-kubeconfig \
+        --region "$AWS_REGION" \
+        --name "$CLUSTER_NAME"
+
+      # Sanity check (this will PASS once aws-auth is correct)
+      - kubectl get nodes
