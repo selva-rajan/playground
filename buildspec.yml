@@ -12,10 +12,16 @@ phases:
     commands:
       - "echo INSTALL"
 
-      # ---- Install AWS CLI v2 (CRITICAL FIX) ----
+      # ---- Install AWS CLI v2 ----
       - "curl -s https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip"
       - "unzip -q awscliv2.zip"
       - "./aws/install --update"
+
+      # ---- FORCE AWS CLI v2 FIRST ----
+      - "export PATH=/usr/local/bin:$PATH"
+      - "hash -r"
+
+      - "which aws"
       - "aws --version"
 
       # ---- Install kubectl ----
@@ -42,6 +48,14 @@ phases:
     commands:
       - "echo POST_BUILD"
       - "docker push $ECR_REPO:$IMAGE_TAG"
+
+      # ---- RECREATE kubeconfig AFTER aws v2 ----
+      - "rm -f ~/.kube/config"
       - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
+
+      # ---- DEBUG TOKEN (IMPORTANT) ----
+      - "aws eks get-token --region $AWS_REGION --cluster-name $CLUSTER_NAME"
+
+      # ---- This WILL now work ----
       - "kubectl get nodes"
       - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
