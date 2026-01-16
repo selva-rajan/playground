@@ -10,39 +10,32 @@ env:
 phases:
   install:
     commands:
-      - echo INSTALL
-      # Install kubectl (match EKS-compatible version)
-      - curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2024-01-04/bin/linux/amd64/kubectl
-      - chmod +x kubectl
-      - mv kubectl /usr/local/bin/kubectl
-      - kubectl version --client
+      - "echo INSTALL"
+      - "curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2024-01-04/bin/linux/amd64/kubectl"
+      - "chmod +x kubectl"
+      - "mv kubectl /usr/local/bin/kubectl"
+      - "kubectl version --client"
 
   pre_build:
     commands:
-      - echo PRE_BUILD
-      - aws sts get-caller-identity
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-      - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
-      - echo IMAGE_TAG=$IMAGE_TAG
+      - "echo PRE_BUILD"
+      - "aws sts get-caller-identity"
+      - "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
+      - "export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER"
+      - "echo IMAGE_TAG=$IMAGE_TAG"
 
   build:
     commands:
-      - echo BUILD
-      - docker build -t nginx-custom:$IMAGE_TAG .
-      - docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG
+      - "echo BUILD"
+      - "docker build -t nginx-custom:$IMAGE_TAG ."
+      - "docker tag nginx-custom:$IMAGE_TAG $ECR_REPO:$IMAGE_TAG"
 
   post_build:
     commands:
-      - echo POST_BUILD
-      - docker push $ECR_REPO:$IMAGE_TAG
-
-      # Generate kubeconfig (no role-arn)
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --alias codebuild
-
-      # Debug / validation
-      - kubectl config current-context
-      - kubectl auth can-i get nodes
-      - kubectl get nodes
-
-      # Deploy updated image
-      - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
+      - "echo POST_BUILD"
+      - "docker push $ECR_REPO:$IMAGE_TAG"
+      - "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME --alias codebuild"
+      - "kubectl config current-context"
+      - "kubectl auth can-i get nodes"
+      - "kubectl get nodes"
+      - "kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG"
