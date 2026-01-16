@@ -5,23 +5,31 @@ env:
     AWS_REGION: "ap-southeast-1"
     CLUSTER_NAME: "eks-cluster-cms"
     ECR_REPO: "776567512500.dkr.ecr.ap-southeast-1.amazonaws.com/nginx-custom"
-    AWS_EKS_DISABLE_LEGACY_KUBECTL_PLUGIN: "false"
+    AWS_EKS_DISABLE_LEGACY_KUBECTL_PLUGIN: "true"
 
 phases:
   install:
     commands:
       - "echo INSTALL"
-      - "curl -L -o kubectl https://dl.k8s.io/release/v1.28.5/bin/linux/amd64/kubectl"
+
+      # ---- Install AWS CLI v2 (CRITICAL FIX) ----
+      - "curl -s https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip"
+      - "unzip -q awscliv2.zip"
+      - "./aws/install --update"
+      - "aws --version"
+
+      # ---- Install kubectl ----
+      - "curl -LO https://dl.k8s.io/release/v1.28.5/bin/linux/amd64/kubectl"
       - "chmod +x kubectl"
       - "mv kubectl /usr/local/bin/kubectl"
-      - "kubectl version --client"
+      - "kubectl version --client=true"
 
   pre_build:
     commands:
       - "echo PRE_BUILD"
       - "aws sts get-caller-identity"
       - "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
-      - "export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER"
+      - "IMAGE_TAG=$CODEBUILD_BUILD_NUMBER"
       - "echo IMAGE_TAG=$IMAGE_TAG"
 
   build:
