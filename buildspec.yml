@@ -55,4 +55,5 @@ phases:
       - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
       # Update deployment
+      - kubectl auth can-i patch deployment/nginx -n default
       - kubectl set image deployment/nginx nginx=$ECR_REPO:$IMAGE_TAG
